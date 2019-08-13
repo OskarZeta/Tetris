@@ -1,6 +1,6 @@
 import Figure from './figure.js';
 import '../css/style.css';
-import { gameHeight, gameWidth, figureTypes } from './globals';
+import { gameHeight, gameWidth, figureTypes, movementSpeed, loopRate } from './globals';
 import { renderGame } from './render';
 
 function generateInitialCells(height, width) {
@@ -14,53 +14,48 @@ function generateInitialCells(height, width) {
   }
   return array;
 }
-
-function updateCells(cells, value) {
-  cells.forEach(({row, cell}) => {
-    array[row][cell] = value;
-  });
-  renderGame(array);
+function updateCells(coords, grid, value) {
+  coords.forEach(({ row, cell }) => grid[row][cell] = value);
+  renderGame(grid);
 }
 function spawnFigure(type) {
   let figure = new Figure(type);
-  updateCells(figure.getCoordinates, 1);
-  renderGame(array);
   return figure;
 }
-function moveFigure(figure, dir) {
-  updateCells(figure.getCoordinates, 0);
+function moveFigure(figure, dir, grid) {
+  updateCells(figure.getCoordinates, grid, 0);
   figure.move(dir);
-  updateCells(figure.getCoordinates, 1);
+  updateCells(figure.getCoordinates, grid, 1);
 }
-function checkBottomCells(cells, array) {
-  let bottomRow = Math.max.apply(null, cells.map(obj => obj.row)) + 1;
-  if (array[bottomRow]) {
-    let columns = [...new Set(cells.map(pair => pair.cell))];
+function checkBottomCells(coords, grid) {
+  let bottomRow = Math.max.apply(null, coords.map(pair => pair.row)) + 1;
+  if (grid[bottomRow]) {
+    let columns = [...new Set(coords.map(pair => pair.cell))];
     return !columns.some(col => {
-      let row = Math.max.apply(null, cells.filter(pair => pair.cell === col).map(pair => pair.row)) + 1;
-      return array[row][col] === 1;
+      let row = Math.max.apply(null, coords.filter(pair => pair.cell === col).map(pair => pair.row)) + 1;
+      return grid[row][col] === 1;
     });
   }
   return false;
 }
-function checkLeftCells(cells, array) {
-  let leftColumn = Math.min.apply(null, cells.map(obj => obj.cell)) - 1;
-  if (array[0][leftColumn] !== undefined) {
-    let rows = [...new Set(cells.map(pair => pair.row))];
+function checkLeftCells(coords, grid) {
+  let leftColumn = Math.min.apply(null, coords.map(pair => pair.cell)) - 1;
+  if (grid[0][leftColumn] !== undefined) {
+    let rows = [...new Set(coords.map(pair => pair.row))];
     return !rows.some(row => {
-      let col = Math.min.apply(null, cells.filter(pair => pair.row === row).map(pair => pair.cell)) - 1;
-      return array[row][col] === 1;
+      let col = Math.min.apply(null, coords.filter(pair => pair.row === row).map(pair => pair.cell)) - 1;
+      return grid[row][col] === 1;
     });
   }
   return false;
 }
-function checkRightCells(cells, array) {
-  let rightColumn = Math.max.apply(null, cells.map(obj => obj.cell)) + 1;
-  if (array[0][rightColumn] !== undefined) {
-    let rows = [...new Set(cells.map(pair => pair.row))];
+function checkRightCells(coords, grid) {
+  let rightColumn = Math.max.apply(null, coords.map(pair => pair.cell)) + 1;
+  if (grid[0][rightColumn] !== undefined) {
+    let rows = [...new Set(coords.map(pair => pair.row))];
     return !rows.some(row => {
-      let col = Math.max.apply(null, cells.filter(pair => pair.row === row).map(pair => pair.cell)) + 1;
-      return array[row][col] === 1;
+      let col = Math.max.apply(null, coords.filter(pair => pair.row === row).map(pair => pair.cell)) + 1;
+      return grid[row][col] === 1;
     });
   }
   return false;
@@ -70,55 +65,64 @@ function pickRandomFigure() {
   return figureTypes[Math.floor(Math.random() * figureTypes.length)];
 }
 
-function figureLoop(figure, speed) {
+function userActions(event, figure, grid) {
+  if (figure.stop) return;
+  switch (event.keyCode) {
+    case 37 : {
+      if (!checkLeftCells(figure.getCoordinates, grid)) return;
+      moveFigure(figure, 'LEFT', grid);
+      break;
+    }
+    case 39 : {
+      if (!checkRightCells(figure.getCoordinates, grid)) return;
+      moveFigure(figure, 'RIGHT', grid);
+      break;
+    }
+    case 40:
+    default : {
+      if (!checkBottomCells(figure.getCoordinates, grid)) return;
+      moveFigure(figure, 'DOWN', grid);
+    }
+  }
+}
+
+function figureLoop(figure, speed, grid) {
   let intervalId = setInterval(() => {
-    if (!checkBottomCells(figure.getCoordinates, array)) {
+    if (!checkBottomCells(figure.getCoordinates, grid)) {
       figure.stopMoving();
       clearInterval(intervalId);
       return;
     }
-    moveFigure(figure, 'DOWN');
+    moveFigure(figure, 'DOWN', grid);
   }, speed);
 }
-function gameLoop() {
+function gameLoop(grid) {
   let figure = spawnFigure(pickRandomFigure());
-  document.addEventListener('keydown', e => {
-    switch (e.keyCode) {
-      case 37 : {
-        if (!checkLeftCells(figure.getCoordinates, array)) return;
-        moveFigure(figure, 'LEFT');
-        break;
-      }
-      case 39 : {
-        if (!checkRightCells(figure.getCoordinates, array)) return;
-        moveFigure(figure, 'RIGHT');
-        break;
-      }
-      case 40:
-      default : {
-        if (!checkBottomCells(figure.getCoordinates, array)) return;
-        moveFigure(figure, 'DOWN');
-      }
-    }
-  });
-  figureLoop(figure, 200);
+  updateCells(figure.getCoordinates, grid, 1);
+  function listenerWrapper(e) {
+    userActions(e, figure, grid);
+  }
+  document.addEventListener('keydown', listenerWrapper);
+  figureLoop(figure, movementSpeed, grid);
   let interval = setInterval(() => {
     if (gameOver) {
       console.log('GAME OVER MAN!');
       clearInterval(interval);
+      document.removeEventListener('keydown', listenerWrapper);
       return;
     }
     if (figure.stop) {
       figure = spawnFigure(pickRandomFigure());
-      if (!checkBottomCells(figure.getCoordinates, array)) {
+      updateCells(figure.getCoordinates, grid, 1);
+      if (!checkBottomCells(figure.getCoordinates, grid)) {
         gameOver = true;
       }
-      figureLoop(figure, 200);
+      figureLoop(figure, movementSpeed, grid);
     }
-  }, 500);
+  }, loopRate);
 }
 
 let gameOver = false;
-let array = generateInitialCells(gameHeight, gameWidth);
-renderGame(array);
-gameLoop();
+let gameGrid = generateInitialCells(gameHeight, gameWidth);
+renderGame(gameGrid);
+gameLoop(gameGrid);
