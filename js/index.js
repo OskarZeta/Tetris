@@ -1,4 +1,4 @@
-import Figure from './figure.js';
+import figureClasses from './figures/index';
 import '../css/style.css';
 import { gameHeight, gameWidth, figureTypes, movementSpeed, loopRate } from './globals';
 import { renderGame } from './render';
@@ -14,12 +14,12 @@ function generateInitialCells(height, width) {
   }
   return array;
 }
-function updateCells(coords, grid, value) {
-  coords.forEach(({ row, cell }) => grid[row][cell] = value);
-  renderGame(grid);
+function updateCells(coords, grid, value, rerender=true) {
+  coords.forEach(({ row, col }) => grid[row][col] = value);
+  if (rerender) renderGame(grid);
 }
-function spawnFigure(type) {
-  let figure = new Figure(type);
+function spawnFigure(FigureClass) {
+  let figure = new FigureClass();
   return figure;
 }
 function moveFigure(figure, dir, grid) {
@@ -27,34 +27,43 @@ function moveFigure(figure, dir, grid) {
   figure.move(dir);
   updateCells(figure.getCoordinates, grid, 1);
 }
+function rotateFigure(figure, grid) {
+  updateCells(figure.getCoordinates, grid, 0);
+  figure.rotate();
+  updateCells(figure.getCoordinates, grid, 1);
+}
+function checkTopCells(coords, grid) {
+  let topRow = Math.min.apply(null, coords.map(pair => pair.row));
+  return Boolean(grid[topRow]); 
+}
 function checkBottomCells(coords, grid) {
   let bottomRow = Math.max.apply(null, coords.map(pair => pair.row)) + 1;
   if (grid[bottomRow]) {
-    let columns = [...new Set(coords.map(pair => pair.cell))];
+    let columns = [...new Set(coords.map(pair => pair.col))];
     return !columns.some(col => {
-      let row = Math.max.apply(null, coords.filter(pair => pair.cell === col).map(pair => pair.row)) + 1;
+      let row = Math.max.apply(null, coords.filter(pair => pair.col === col).map(pair => pair.row)) + 1;
       return grid[row][col] === 1;
     });
   }
   return false;
 }
-function checkLeftCells(coords, grid) {
-  let leftColumn = Math.min.apply(null, coords.map(pair => pair.cell)) - 1;
+function checkLeftCells(coords, grid, range = 1) {
+  let leftColumn = Math.min.apply(null, coords.map(pair => pair.col)) - range;
   if (grid[0][leftColumn] !== undefined) {
     let rows = [...new Set(coords.map(pair => pair.row))];
     return !rows.some(row => {
-      let col = Math.min.apply(null, coords.filter(pair => pair.row === row).map(pair => pair.cell)) - 1;
+      let col = Math.min.apply(null, coords.filter(pair => pair.row === row).map(pair => pair.col)) - range;
       return grid[row][col] === 1;
     });
   }
   return false;
 }
-function checkRightCells(coords, grid) {
-  let rightColumn = Math.max.apply(null, coords.map(pair => pair.cell)) + 1;
+function checkRightCells(coords, grid, range = 1) {
+  let rightColumn = Math.max.apply(null, coords.map(pair => pair.col)) + range;
   if (grid[0][rightColumn] !== undefined) {
     let rows = [...new Set(coords.map(pair => pair.row))];
     return !rows.some(row => {
-      let col = Math.max.apply(null, coords.filter(pair => pair.row === row).map(pair => pair.cell)) + 1;
+      let col = Math.max.apply(null, coords.filter(pair => pair.row === row).map(pair => pair.col)) + range;
       return grid[row][col] === 1;
     });
   }
@@ -62,7 +71,7 @@ function checkRightCells(coords, grid) {
 }
 
 function pickRandomFigure() {
-  return figureTypes[Math.floor(Math.random() * figureTypes.length)];
+  return figureClasses[Math.floor(Math.random() * figureTypes.length)];
 }
 
 function userActions(event, figure, grid) {
@@ -71,6 +80,19 @@ function userActions(event, figure, grid) {
     case 37 : {
       if (!checkLeftCells(figure.getCoordinates, grid)) return;
       moveFigure(figure, 'LEFT', grid);
+      break;
+    }
+    case 38 : {
+      const nextCoords = figure.rotate(true);
+      updateCells(figure.getCoordinates, grid, 0, false);
+      if (checkTopCells(nextCoords, grid) &&
+          checkBottomCells(nextCoords, grid) && 
+          checkLeftCells(nextCoords, grid, 0) &&
+          checkRightCells(nextCoords, grid, 0)){
+            rotateFigure(figure, grid);
+      } else {
+        updateCells(figure.getCoordinates, grid, 1, false);
+      }
       break;
     }
     case 39 : {
@@ -98,6 +120,7 @@ function figureLoop(figure, speed, grid) {
 }
 function gameLoop(grid) {
   let figure = spawnFigure(pickRandomFigure());
+  //let figure = spawnFigure(figureClasses[0]);
   updateCells(figure.getCoordinates, grid, 1);
   function listenerWrapper(e) {
     userActions(e, figure, grid);
@@ -105,24 +128,21 @@ function gameLoop(grid) {
   document.addEventListener('keydown', listenerWrapper);
   figureLoop(figure, movementSpeed, grid);
   let interval = setInterval(() => {
-    if (gameOver) {
-      console.log('GAME OVER MAN!');
-      clearInterval(interval);
-      document.removeEventListener('keydown', listenerWrapper);
-      return;
-    }
     if (figure.stop) {
       figure = spawnFigure(pickRandomFigure());
+      //figure = spawnFigure(figureClasses[0]);
       updateCells(figure.getCoordinates, grid, 1);
       if (!checkBottomCells(figure.getCoordinates, grid)) {
-        gameOver = true;
+        clearInterval(interval);
+        document.removeEventListener('keydown', listenerWrapper);
+        console.log('GAME OVER MAN!');
+        return;
       }
       figureLoop(figure, movementSpeed, grid);
     }
   }, loopRate);
 }
 
-let gameOver = false;
 let gameGrid = generateInitialCells(gameHeight, gameWidth);
 renderGame(gameGrid);
 gameLoop(gameGrid);
