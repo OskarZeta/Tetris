@@ -21,6 +21,10 @@ export function renderGame(array) {
     gameEl.appendChild(row);
   }
 }
+export function renderScore(score) {
+  let scoreEl = document.getElementById('score');
+  scoreEl.innerHTML = score;
+}
 export function clearGame() {
   let gameEl = document.getElementById('game');
   gameEl.innerHTML = '';
