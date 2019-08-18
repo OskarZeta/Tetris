@@ -1,5 +1,5 @@
 export function renderCell({ value, modifiers }) {
-  let cellEl = document.createElement('DIV');
+  const cellEl = document.createElement('DIV');
   cellEl.classList.add('cell');
   if (value === 1) cellEl.classList.add('cell--occupied');
   if (modifiers) {
@@ -8,7 +8,7 @@ export function renderCell({ value, modifiers }) {
   return cellEl;
 }
 export function renderRow(row) {
-  let rowEl = document.createElement('DIV');
+  const rowEl = document.createElement('DIV');
   rowEl.classList.add('row');
   for (let i = 0; i < row.length; i++) {
     let cell = renderCell(row[i]);
@@ -17,18 +17,29 @@ export function renderRow(row) {
   return rowEl;
 }
 export function renderGame(array) {
-  let gameEl = document.getElementById('game');
-  clearGame();
+  const gameEl = document.getElementById('game');
+  clearElement(gameEl);
   for (let i = 0; i < array.length; i++) {
     let row = renderRow(array[i]);
     gameEl.appendChild(row);
   }
 }
+export function renderNextFigure(array) {
+  const nextEl = document.getElementById('next');
+  clearElement(nextEl);
+  for (let i = 0; i < array.length; i++) {
+    let row = renderRow(array[i]);
+    nextEl.appendChild(row);
+  }
+}
 export function renderScore(score) {
-  let scoreEl = document.getElementById('score');
+  const scoreEl = document.getElementById('score');
   scoreEl.innerHTML = score;
 }
-export function clearGame() {
-  let gameEl = document.getElementById('game');
-  gameEl.innerHTML = '';
+export function renderLevel(level) {
+  const levelEl = document.getElementById('level');
+  levelEl.innerHTML = level;
+}
+export function clearElement(element) {
+  element.innerHTML = '';
 }

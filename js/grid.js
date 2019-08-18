@@ -1,6 +1,6 @@
-import { renderGame, renderScore } from './render';
-import { gameWidth, scores } from './globals';
-import { score, addScore } from './index';
+import { renderGame, renderScore, renderLevel } from './render';
+import { gameWidth, scores, levelingUpBase } from './globals';
+import { score, addScore, level, increaseLevel } from './index';
 
 export function generateInitialCells(height, width) {
   let array = [];
@@ -20,6 +20,7 @@ export function generateInitialCells(height, width) {
 export function updateCells(coords, grid, cell, rerender = true) {
   coords.forEach(({ row, col }) => grid[row][col] = cell);
   if (rerender) renderGame(grid);
+  return grid;
 }
 
 export function checkTopCells(coords, grid) {
@@ -85,6 +86,10 @@ export function clearLines(grid) {
     deleteRows(linesToClear, grid);
     addEmptyRows(linesToClear.length, grid);
     addScore(scores[linesToClear.length - 1]);
+    if (score >= levelingUpBase * (level ** 2)) {
+      increaseLevel();
+      renderLevel(level);
+    }
     renderScore(score);
   }
 }

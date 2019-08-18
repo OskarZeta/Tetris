@@ -1,8 +1,8 @@
 import '../css/style.css';
-import { gameHeight, gameWidth, movementSpeed, loopRate } from './globals';
+import { gameHeight, gameWidth, movementSpeeds, loopRate, levelsLimit } from './globals';
 import figureClasses from './figures/index';
 import { userActions } from './event_handlers';
-import { renderGame } from './render';
+import { renderGame, renderNextFigure } from './render';
 import { generateInitialCells, updateCells, checkBottomCells, clearLines, checkSpawnCells } from './grid';
 
 function spawnFigure(FigureClass) {
@@ -27,6 +27,18 @@ function pickRandomFigure() {
 export function addScore(value) {
   score += value;
 }
+export function increaseLevel() {
+  if (level < levelsLimit) level++;
+}
+function showNextFigure(figure) {
+  let grid = generateInitialCells(4, 9);
+  let coords = figure.getCoordinates.map(({ row, col }) => ({
+    row: row + 1,
+    col: Math.floor(col/(10/9)) 
+  }));
+  grid = updateCells(coords, grid, setCellProps(1, { className: figure.className }), false);
+  renderNextFigure(grid);
+}
 
 function figureLoop(figure, speed, grid) {
   let intervalId = setInterval(() => {
@@ -41,16 +53,18 @@ function figureLoop(figure, speed, grid) {
 }
 function gameLoop(grid) {
   let figure = spawnFigure(pickRandomFigure());
-  //let figure = spawnFigure(figureClasses[3]);
+  let nextFigure = spawnFigure(pickRandomFigure());
   updateCells(figure.getCoordinates, grid, setCellProps(1, { className: figure.className }));
+  showNextFigure(nextFigure);
   function listenerWrapper(e) {
     userActions(e, figure, grid);
   }
   document.addEventListener('keydown', listenerWrapper);
-  figureLoop(figure, movementSpeed, grid);
+  figureLoop(figure, movementSpeeds[level-1], grid);
   let interval = setInterval(() => {
     if (figure.stop) {
-      figure = spawnFigure(pickRandomFigure());
+      figure = nextFigure;
+      nextFigure = spawnFigure(pickRandomFigure());
       if (!checkSpawnCells(figure.getCoordinates, grid)) {
         clearInterval(interval);
         document.removeEventListener('keydown', listenerWrapper);
@@ -58,13 +72,15 @@ function gameLoop(grid) {
         return;
       }
       updateCells(figure.getCoordinates, grid, setCellProps(1, { className: figure.className }));
-      figureLoop(figure, movementSpeed, grid);
+      showNextFigure(nextFigure);
+      figureLoop(figure, movementSpeeds[level-1], grid);
     }
   }, loopRate);
 }
 
 let gameGrid = generateInitialCells(gameHeight, gameWidth);
 export let score = 0;
+export let level = 1;
 
 renderGame(gameGrid);
 gameLoop(gameGrid);
