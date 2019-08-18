@@ -1,7 +1,10 @@
-export function renderCell(occupied) {
+export function renderCell({ value, modifiers }) {
   let cellEl = document.createElement('DIV');
   cellEl.classList.add('cell');
-  if (occupied) cellEl.classList.add('cell--occupied');
+  if (value === 1) cellEl.classList.add('cell--occupied');
+  if (modifiers) {
+    cellEl.classList.add(modifiers.className);
+  }
   return cellEl;
 }
 export function renderRow(row) {

@@ -1,12 +1,12 @@
 import { gameWidth } from '../globals.js';
-let st = gameWidth/2;
 
 class Figure {
   constructor (type) {
     this.type = type;
     this.stop = false;
-    this.startPos = st;
+    this.startPos = gameWidth/2;
     this.currentFrame = 1;
+    this.className = 'cell--' + this.type;
   }
   get getCoordinates() {
     return this.coordinates;
