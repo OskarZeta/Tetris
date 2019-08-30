@@ -2,27 +2,68 @@
   <head>
     <title>Tetris</title>
     <!-- <link rel="stylesheet" href="css/bundle.css"> -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet"> 
     <meta charset="utf-8">
   </head>
   <body>
-    TETRIS
-    <main>
-      <div>
-        <div class="container">
+    <header>
+      <div class="wrapper wrapper--header">
+        <h1>TETRIS</h1>
+      </div>
+    </header>
+    <main class="app">
+      <div class="wrapper">
+        <div class="left-column styled-container">
+          <span class="caption">Game</span>
           <div id="game"></div>
-          <div class="next-container">
-            <span>Next</span>
+        </div>
+        <div class="right-column">
+          <div class="container styled-container">
+            <span class="caption">Next</span>
             <div id="next"></div>
           </div>
-        </div>
-        <div>
-          <div>
-            <span>Score: </span>
-            <div id="score">0</div>
+          <div class="container container--stats styled-container">
+            <span class="caption">Stats</span>
+            <div>
+              <span>Score: </span>
+              <span id="score">0</span>
+            </div>
+            <div>
+              <span>Level: </span>
+              <span id="level">1</span>
+            </div>
+            <div class="pause-wrapper">
+              <span id="pause"></span>
+            </div>
           </div>
-          <div>
-            <span>Level </span>
-            <span id="level">1</span>
+          <div class="container styled-container">
+            <span class="caption">Help</span>
+            <div class="help-wrapper">
+              <div>
+                <span>Left</span>
+                <span>←</span>
+              </div>
+              <div>
+                <span>Right</span>
+                <span>→</span>
+              </div>
+              <div>
+                <span>Down</span>
+                <span>↓</span>
+              </div>
+              <div>
+                <span>Rotate</span>
+                <span>↑</span>
+              </div>
+              <div>
+                <span>Drop</span>
+                <span>space</span>
+              </div>
+              <div>
+                <span>Pause</span>
+                <span>p</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

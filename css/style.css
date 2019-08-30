@@ -1,5 +1,65 @@
 * {
   box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background: black;
+  color: white;
+}
+#game {
+  width: 242px;
+  height: 482px;
+  border: 1px solid #243235;
+}
+.app {
+  width: 100%;
+  font-size: 18px;
+}
+.wrapper {
+  display: flex;
+  justify-content: space-between;
+  width: 570px;
+  margin: 0 auto;
+}
+.wrapper--header {
+  justify-content: center;
+}
+.styled-container {
+  position: relative;
+  border: 2px double white;
+  padding: 20px;
+  background: #23008b;
+}
+.caption {
+  position: absolute;
+  width: 60px;
+  top: -10px;
+  left: calc(50% - 25px);
+  text-align: center;
+  background: black;
+}
+.container {
+  margin-bottom: 20px;
+}
+.container--stats {
+  padding-bottom: 40px;
+}
+.pause-wrapper {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  animation: blink 1.5s steps(3, start) infinite;
+}
+.help-wrapper div{
+  display: flex;
+  justify-content: space-between;
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
 }
 .row {
   display: flex;
