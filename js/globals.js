@@ -16,8 +16,14 @@ export let pause = false;
 export function addScore(value) {
   score += value;
 }
+export function setScore(value) {
+  score = value;
+}
 export function increaseLevel() {
   if (level < levelsLimit) level++;
+}
+export function setLevel(value) {
+  level = value;
 }
 export function setPause(value) {
   pause = value;

@@ -1,11 +1,12 @@
 import '../css/style.css';
 import { 
   gameHeight, gameWidth, nextFieldHeight, nextFieldWidth,
-  movementSpeeds, loopRate, saveGameState, gameState, pause, level 
+  movementSpeeds, loopRate, saveGameState, gameState, pause, level, 
+  score, setLevel, setScore
 } from './globals';
 import { pickRandomFigure, setCellProps } from './utils';
 import { userActions, globalActions } from './event_handlers';
-import { renderGame, renderNextFigure } from './render';
+import { renderGame, renderNextFigure, renderScore, renderLevel } from './render';
 import { 
   generateInitialCells, updateCells, checkBottomCells, 
   clearLines, checkSpawnCells 
@@ -35,6 +36,25 @@ function showNextFigure(figure) {
 }
 export function loadGameState() {
   gameLoop(gameState.grid, { figure: gameState.figure, nextFigure: gameState.nextFigure });
+}
+function initGame() {
+  let gameGrid = generateInitialCells(gameHeight, gameWidth);
+  renderGame(gameGrid);
+  gameLoop(gameGrid);
+  document.addEventListener('keypress', globalActions);
+}
+function endGame() {
+  let restart = confirm(
+    'Game over! Your score is ' + score + ' points. ' +
+    'Would you like to start a new game?'
+  );
+  if (restart) {
+    setScore(0);
+    renderScore(score);
+    setLevel(1);
+    renderLevel(level);
+    initGame();
+  }
 }
 
 function figureLoop(figure, speed, grid) {
@@ -77,7 +97,8 @@ function gameLoop(grid, gameState) {
       if (!checkSpawnCells(figure.getCoordinates, grid)) {
         clearInterval(interval);
         document.removeEventListener('keydown', listenerWrapper);
-        console.log('GAME OVER MAN!');
+        document.removeEventListener('keypress', globalActions);
+        endGame();
         return;
       }
       updateCells(figure.getCoordinates, grid, setCellProps(1, { className: figure.className }));
@@ -93,7 +114,4 @@ function gameLoop(grid, gameState) {
   }, loopRate);
 }
 
-let gameGrid = generateInitialCells(gameHeight, gameWidth);
-renderGame(gameGrid);
-gameLoop(gameGrid);
-document.addEventListener('keypress', globalActions);
+initGame();
