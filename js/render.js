@@ -40,6 +40,10 @@ export function renderLevel(level) {
   const levelEl = document.getElementById('level');
   levelEl.innerHTML = level;
 }
+export function renderPause(pause) {
+  const pauseEl = document.getElementById('pause');
+  pauseEl.innerHTML = pause ? 'paused' : '';
+}
 export function clearElement(element) {
   element.innerHTML = '';
 }

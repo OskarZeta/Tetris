@@ -1,6 +1,8 @@
 import { renderGame, renderScore, renderLevel } from './render';
-import { gameWidth, scores, levelingUpBase } from './globals';
-import { score, addScore, level, increaseLevel } from './index';
+import { 
+  gameWidth, scores, levelingUpBase, 
+  score, addScore, level, increaseLevel 
+} from './globals';
 
 export function generateInitialCells(height, width) {
   let array = [];

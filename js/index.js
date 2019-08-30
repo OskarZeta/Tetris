@@ -1,16 +1,19 @@
 import '../css/style.css';
-import { gameHeight, gameWidth, movementSpeeds, loopRate, levelsLimit } from './globals';
-import figureClasses from './figures/index';
-import { userActions } from './event_handlers';
+import { 
+  gameHeight, gameWidth, nextFieldHeight, nextFieldWidth,
+  movementSpeeds, loopRate, saveGameState, gameState, pause, level 
+} from './globals';
+import { pickRandomFigure, setCellProps } from './utils';
+import { userActions, globalActions } from './event_handlers';
 import { renderGame, renderNextFigure } from './render';
-import { generateInitialCells, updateCells, checkBottomCells, clearLines, checkSpawnCells } from './grid';
+import { 
+  generateInitialCells, updateCells, checkBottomCells, 
+  clearLines, checkSpawnCells 
+} from './grid';
 
 function spawnFigure(FigureClass) {
   let figure = new FigureClass();
   return figure;
-}
-export function setCellProps(value, modifiers) {
-  return { value, modifiers };
 }
 export function moveFigure(figure, dir, grid) {
   updateCells(figure.getCoordinates, grid, setCellProps(0, null));
@@ -21,39 +24,45 @@ export function rotateFigure(figure, grid) {
   figure.rotate();
   updateCells(figure.getCoordinates, grid, setCellProps(1, { className: figure.className }));
 }
-function pickRandomFigure() {
-  return figureClasses[Math.floor(Math.random() * figureClasses.length)];
-}
-export function addScore(value) {
-  score += value;
-}
-export function increaseLevel() {
-  if (level < levelsLimit) level++;
-}
 function showNextFigure(figure) {
-  let grid = generateInitialCells(4, 9);
+  let grid = generateInitialCells(nextFieldHeight, nextFieldWidth);
   let coords = figure.getCoordinates.map(({ row, col }) => ({
     row: row + 1,
-    col: Math.floor(col/(10/9)) 
+    col: Math.floor(col/(10/nextFieldWidth)) 
   }));
   grid = updateCells(coords, grid, setCellProps(1, { className: figure.className }), false);
   renderNextFigure(grid);
 }
+export function loadGameState() {
+  gameLoop(gameState.grid, { figure: gameState.figure, nextFigure: gameState.nextFigure });
+}
 
 function figureLoop(figure, speed, grid) {
-  let intervalId = setInterval(() => {
+  let interval = setInterval(() => {
+    if (pause) {
+      clearInterval(interval);
+      return;
+    }
     if (!checkBottomCells(figure.getCoordinates, grid)) {
       clearLines(grid);
       figure.stopMoving();
-      clearInterval(intervalId);
+      clearInterval(interval);
       return;
     }
     moveFigure(figure, 'DOWN', grid);
   }, speed);
 }
-function gameLoop(grid) {
-  let figure = spawnFigure(pickRandomFigure());
-  let nextFigure = spawnFigure(pickRandomFigure());
+
+function gameLoop(grid, gameState) {
+  let figure;
+  let nextFigure;
+  if (gameState) {
+    figure = gameState.figure;
+    nextFigure = gameState.nextFigure;
+  } else {
+    figure = spawnFigure(pickRandomFigure());
+    nextFigure = spawnFigure(pickRandomFigure());
+  }
   updateCells(figure.getCoordinates, grid, setCellProps(1, { className: figure.className }));
   showNextFigure(nextFigure);
   function listenerWrapper(e) {
@@ -75,12 +84,16 @@ function gameLoop(grid) {
       showNextFigure(nextFigure);
       figureLoop(figure, movementSpeeds[level-1], grid);
     }
+    if (pause) {
+      clearInterval(interval);
+      document.removeEventListener('keydown', listenerWrapper);
+      saveGameState({ grid, figure, nextFigure });
+      return;
+    }
   }, loopRate);
 }
 
 let gameGrid = generateInitialCells(gameHeight, gameWidth);
-export let score = 0;
-export let level = 1;
-
 renderGame(gameGrid);
 gameLoop(gameGrid);
+document.addEventListener('keypress', globalActions);

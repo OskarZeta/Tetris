@@ -1,5 +1,8 @@
 import { checkBottomCells, checkTopCells, checkLeftCells, checkRightCells, updateCells } from './grid';
-import { moveFigure, rotateFigure, setCellProps } from './index';
+import { moveFigure, rotateFigure, loadGameState } from './index';
+import { setPause, pause, loopRate } from './globals';
+import { debounce, setCellProps } from './utils';
+import { renderPause } from './render';
 
 export function userActions(event, figure, grid) {
   if (figure.stop) return;
@@ -40,3 +43,13 @@ export function userActions(event, figure, grid) {
     }
   }
 }
+export const globalActions = debounce(function (event) {
+  switch (event.code) {
+    case 'KeyP': {
+      setPause(!pause);
+      renderPause(pause);
+      if (!pause) loadGameState();
+      break;
+    }
+  }
+}, loopRate);
